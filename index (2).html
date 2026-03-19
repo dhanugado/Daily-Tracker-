@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#F5F4F0;color:#1a1a1a;min-height:100vh;font-size:14px}
+.app{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:#F5F4F0}
+.header{padding:20px 20px 0;background:#fff;border-bottom:0.5px solid rgba(0,0,0,0.1)}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.brand{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;letter-spacing:0.02em;color:#1a1a1a}
+.brand span{color:#B47F3C}
+.date-chip{font-size:11px;color:#888;background:#F5F4F0;padding:4px 10px;border-radius:20px;border:0.5px solid rgba(0,0,0,0.1)}
+.nav{display:flex}
+.nav-btn{flex:1;padding:10px 0;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;border:none;background:transparent;color:#888;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;letter-spacing:0.03em}
+.nav-btn.active{color:#B47F3C;border-bottom:2px solid #B47F3C}
+.content{flex:1;padding:16px;overflow-y:auto}
+.section-label{font-size:10px;font-weight:500;letter-spacing:0.08em;color:#888;text-transform:uppercase;margin-bottom:10px;margin-top:18px}
+.section-label:first-child{margin-top:0}
+
+/* Metric */
+.metrics-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+.metric-card{background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-radius:12px;padding:14px 16px}
+.metric-label{font-size:11px;color:#888;margin-bottom:6px}
+.metric-value{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;line-height:1;color:#1a1a1a}
+.metric-value.gold{color:#B47F3C}
+.metric-sub{font-size:11px;color:#888;margin-top:4px}
+
+/* Table card */
+.table-card{background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-radius:12px;overflow:hidden}
+.table-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:8px;padding:11px 14px;border-bottom:0.5px solid rgba(0,0,0,0.07);cursor:pointer;transition:background 0.1s}
+.table-row:last-child{border-bottom:none}
+.table-row:hover{background:#FAF9F7}
+.table-row.overdue{background:#FEF6EF}
+.table-row.overdue:hover{background:#FAEADA}
+.tr-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1a1a1a}
+.tr-name.overdue-text{color:#7A3010}
+.tr-area{font-size:11px;color:#888;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-date{font-size:12px;font-weight:500;white-space:nowrap}
+.tr-date.overdue-text{color:#C0392B}
+.tr-date.ok{color:#B47F3C}
+.overdue-badge{font-size:9px;background:#F7C1C1;color:#A32D2D;padding:2px 7px;border-radius:20px;font-weight:500;white-space:nowrap}
+
+/* Inspection table */
+.insp-row{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px;padding:11px 14px;border-bottom:0.5px solid rgba(0,0,0,0.07)}
+.insp-row:last-child{border-bottom:none}
+.insp-date-box{text-align:center}
+.insp-day{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:#B47F3C;line-height:1}
+.insp-mon{font-size:9px;color:#888;letter-spacing:0.05em;text-transform:uppercase}
+.insp-name{font-size:13px;font-weight:500;color:#1a1a1a}
+.insp-loc{font-size:11px;color:#888;margin-top:2px}
+.insp-tag{font-size:10px;background:#F5E6CC;color:#7A5C2A;padding:3px 9px;border-radius:20px;font-weight:500;white-space:nowrap}
+
+/* Clients */
+.add-btn{width:100%;padding:12px;border:0.5px dashed rgba(180,127,60,0.5);border-radius:12px;background:transparent;color:#B47F3C;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;margin-bottom:14px}
+.add-btn:hover{background:rgba(180,127,60,0.05)}
+.client-card{background:#fff;border:0.5px solid rgba(0,0,0,0.08);border-radius:12px;margin-bottom:10px;overflow:hidden;cursor:pointer;transition:border-color 0.15s}
+.client-card:hover{border-color:rgba(0,0,0,0.18)}
+.client-head{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.c-avatar{width:40px;height:40px;border-radius:50%;background:#F5E6CC;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:#B47F3C;flex-shrink:0}
+.c-info{flex:1;min-width:0}
+.c-name{font-size:14px;font-weight:500;color:#1a1a1a}
+.c-sub{font-size:11px;color:#888;margin-top:2px}
+.c-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.status-pill{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:500}
+.status-active{background:#EAF3DE;color:#3B6D11}
+.status-closed{background:#E1F5EE;color:#0F6E56}
+.status-dead{background:#F0EFEB;color:#888}
+.c-followdate{font-size:10px;color:#888}
+.c-followdate.overdue{color:#C0392B}
+.client-body{border-top:0.5px solid rgba(0,0,0,0.07);padding:12px 16px 14px}
+.detail-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.detail-chip{font-size:11px;background:#F5F4F0;color:#888;padding:4px 10px;border-radius:20px;border:0.5px solid rgba(0,0,0,0.08)}
+.detail-chip.highlight{background:#F5E6CC;color:#7A5C2A;border-color:#E8C98A}
+.notes-label{font-size:10px;color:#888;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;margin-top:8px}
+.notes-text{font-size:12px;color:#1a1a1a;line-height:1.6}
+.client-actions{display:flex;gap:8px;margin-top:12px}
+.action-btn{flex:1;padding:8px;border:0.5px solid rgba(0,0,0,0.1);border-radius:8px;background:transparent;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;color:#888;cursor:pointer}
+.action-btn:hover{background:#F5F4F0}
+.action-btn.primary{border-color:#B47F3C;color:#B47F3C}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:flex-end;z-index:100}
+.modal{background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-height:88vh;overflow-y:auto}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;margin-bottom:18px;color:#1a1a1a}
+.field-group{margin-bottom:13px}
+.field-label{font-size:11px;color:#888;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:5px}
+.field-input{width:100%;padding:10px 12px;border:0.5px solid rgba(0,0,0,0.15);border-radius:8px;background:#F5F4F0;font-family:'DM Sans',sans-serif;font-size:13px;color:#1a1a1a;outline:none}
+.field-input:focus{border-color:#B47F3C}
+.field-select{width:100%;padding:10px 12px;border:0.5px solid rgba(0,0,0,0.15);border-radius:8px;background:#F5F4F0;font-family:'DM Sans',sans-serif;font-size:13px;color:#1a1a1a;outline:none}
+.modal-actions{display:flex;gap:10px;margin-top:18px}
+.btn-cancel{flex:1;padding:12px;border:0.5px solid rgba(0,0,0,0.1);border-radius:8px;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;color:#888}
+.btn-save{flex:2;padding:12px;border:none;border-radius:8px;background:#B47F3C;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:white;cursor:pointer}
+.btn-save:hover{background:#9E6F34}
+.empty-state{padding:32px 0;text-align:center;color:#888;font-size:13px}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="header">
+    <div class="header-top">
+      <div class="brand">Daily Tracker</div>
+      <div class="date-chip" id="datechip"></div>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn active" onclick="showTab('dashboard')">Dashboard</button>
+      <button class="nav-btn" onclick="showTab('clients')">Clients</button>
+      <button class="nav-btn" onclick="showTab('followups')">Follow-ups</button>
+    </nav>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<div class="modal-overlay" id="modal" style="display:none">
+  <div class="modal" id="modal-inner"></div>
+</div>
+
+<script>
+const today = new Date(); today.setHours(0,0,0,0);
+document.getElementById('datechip').textContent = today.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+
+function loadData(){
+  try{ return JSON.parse(localStorage.getItem('dailytracker_clients')||'null'); }catch(e){return null;}
+}
+function saveData(d){ try{localStorage.setItem('dailytracker_clients',JSON.stringify(d));}catch(e){} }
+
+let clients = loadData() || [];
+let nextId = clients.length ? Math.max(...clients.map(c=>c.id))+1 : 1;
+let activeTab = 'dashboard';
+
+function persist(){ saveData(clients); }
+function d(ds){ return new Date(ds+'T00:00:00'); }
+function daysBetween(ds){ if(!ds) return null; return Math.floor((d(ds)-today)/86400000); }
+function fmt(ds){ if(!ds) return ''; return d(ds).toLocaleDateString('en-IN',{day:'numeric',month:'short'}); }
+function initials(n){ return n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+
+function showTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>b.classList.toggle('active',['dashboard','clients','followups'][i]===tab));
+  render();
+}
+
+function render(){
+  document.getElementById('content').innerHTML =
+    activeTab==='dashboard'?renderDashboard():
+    activeTab==='clients'?renderClients():renderFollowups();
+}
+
+function renderDashboard(){
+  const active=clients.filter(c=>c.status==='active');
+  const overdueList=active.filter(c=>c.followup&&daysBetween(c.followup)<0).sort((a,b)=>new Date(a.followup)-new Date(b.followup));
+  const weekList=active.filter(c=>c.followup&&daysBetween(c.followup)>=0&&daysBetween(c.followup)<=7).sort((a,b)=>new Date(a.followup)-new Date(b.followup));
+  const allFollowups=[...overdueList,...weekList];
+  const inspList=active.filter(c=>c.insp&&daysBetween(c.insp)>=0).sort((a,b)=>new Date(a.insp)-new Date(b.insp));
+
+  let h=`<div class="section-label">Overview</div>
+  <div class="metrics-row">
+    <div class="metric-card"><div class="metric-label">Active clients</div><div class="metric-value gold">${active.length}</div><div class="metric-sub">in progress</div></div>
+    <div class="metric-card"><div class="metric-label">Due this week</div><div class="metric-value">${weekList.length}</div><div class="metric-sub">follow-ups</div></div>
+  </div>
+  <div class="section-label">Follow-ups</div>`;
+
+  if(!allFollowups.length){
+    h+=`<div class="table-card"><div class="empty-state">No follow-ups scheduled</div></div>`;
+  } else {
+    h+=`<div class="table-card">`;
+    allFollowups.forEach(c=>{
+      const days=daysBetween(c.followup);
+      const isOverdue=days<0;
+      h+=`<div class="table-row ${isOverdue?'overdue':''}" onclick="openFollowupNote(${c.id})">
+        <div>
+          <div class="tr-name ${isOverdue?'overdue-text':''}">${c.name}</div>
+          <div class="tr-area">${c.area}</div>
+        </div>
+        <div class="tr-date ${isOverdue?'overdue-text':'ok'}">${fmt(c.followup)}</div>
+        ${isOverdue?`<div class="overdue-badge">${Math.abs(days)}d late</div>`:'<div></div>'}
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+
+  h+=`<div class="section-label">Inspections</div>`;
+  if(!inspList.length){
+    h+=`<div class="table-card"><div class="empty-state">No upcoming inspections</div></div>`;
+  } else {
+    h+=`<div class="table-card">`;
+    inspList.forEach(c=>{
+      const day=d(c.insp).getDate();
+      const mon=d(c.insp).toLocaleDateString('en-IN',{month:'short'});
+      h+=`<div class="insp-row">
+        <div class="insp-date-box"><div class="insp-day">${day}</div><div class="insp-mon">${mon}</div></div>
+        <div><div class="insp-name">${c.name}</div><div class="insp-loc">${c.inspLoc||c.area}</div></div>
+        <div class="insp-tag">${c.type.split(' ')[0]}</div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+  return h;
+}
+
+function renderClients(){
+  let h=`<button class="add-btn" onclick="openAddClient()">+ Add new client</button>`;
+  if(!clients.length) return h+`<div class="empty-state">No clients yet. Add your first one above.</div>`;
+  const sorted=[...clients].sort((a,b)=>{
+    if(a.status==='active'&&b.status!=='active') return -1;
+    if(b.status==='active'&&a.status!=='active') return 1;
+    return 0;
+  });
+  sorted.forEach(c=>{
+    const days=c.followup?daysBetween(c.followup):null;
+    const followStr=days===null?'':days<0?`${Math.abs(days)}d overdue`:days===0?'Follow up today':`Follow up in ${days}d`;
+    h+=`<div class="client-card" onclick="toggleClient(${c.id})">
+      <div class="client-head">
+        <div class="c-avatar">${initials(c.name)}</div>
+        <div class="c-info">
+          <div class="c-name">${c.name}</div>
+          <div class="c-sub">${c.area}${c.budget?' · '+c.budget:''}</div>
+        </div>
+        <div class="c-right">
+          <div class="status-pill status-${c.status}">${c.status}</div>
+          ${c.followup?`<div class="c-followdate ${days<0?'overdue':''}">${followStr}</div>`:''}
+        </div>
+      </div>`;
+    if(c.expanded){
+      h+=`<div class="client-body">
+        <div class="detail-row">
+          <div class="detail-chip">${c.type}</div>
+          ${c.ref?`<div class="detail-chip">via ${c.ref}</div>`:''}
+          ${c.followup?`<div class="detail-chip highlight">Follow-up: ${fmt(c.followup)}</div>`:''}
+          ${c.insp?`<div class="detail-chip highlight">Inspection: ${fmt(c.insp)}</div>`:''}
+        </div>
+        ${c.inspLoc&&c.insp?`<div style="font-size:11px;color:#888;margin-bottom:8px">Inspection at: ${c.inspLoc}</div>`:''}
+        ${c.notes?`<div class="notes-label">Last note</div><div class="notes-text">${c.notes}</div>`:''}
+        <div class="client-actions">
+          <button class="action-btn" onclick="event.stopPropagation();markStatus(${c.id},'dead')">Dead</button>
+          <button class="action-btn" onclick="event.stopPropagation();markStatus(${c.id},'closed')">Closed</button>
+          <button class="action-btn primary" onclick="event.stopPropagation();openEditClient(${c.id})">Edit</button>
+        </div>
+      </div>`;
+    }
+    h+=`</div>`;
+  });
+  return h;
+}
+
+function renderFollowups(){
+  const active=clients.filter(c=>c.status==='active'&&c.followup).sort((a,b)=>new Date(a.followup)-new Date(b.followup));
+  if(!active.length) return `<div class="empty-state">No follow-ups scheduled</div>`;
+  let h=`<div class="table-card">`;
+  active.forEach(c=>{
+    const days=daysBetween(c.followup);
+    const isOverdue=days<0;
+    h+=`<div class="table-row ${isOverdue?'overdue':''}" onclick="openFollowupNote(${c.id})">
+      <div>
+        <div class="tr-name ${isOverdue?'overdue-text':''}">${c.name}</div>
+        <div class="tr-area">${c.area}</div>
+      </div>
+      <div class="tr-date ${isOverdue?'overdue-text':'ok'}">${fmt(c.followup)}</div>
+      ${isOverdue?`<div class="overdue-badge">${Math.abs(days)}d late</div>`:'<div style="width:44px"></div>'}
+    </div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+
+function toggleClient(id){
+  clients=clients.map(c=>c.id===id?{...c,expanded:!c.expanded}:c);
+  persist(); render();
+}
+function markStatus(id,status){
+  clients=clients.map(c=>c.id===id?{...c,status,expanded:false}:c);
+  persist(); render();
+}
+
+function openFollowupNote(id){
+  const c=clients.find(x=>x.id===id);
+  document.getElementById('modal-inner').innerHTML=`
+    <div class="modal-title">Update follow-up</div>
+    <div style="font-size:13px;font-weight:500;margin-bottom:2px;color:#1a1a1a">${c.name}</div>
+    <div style="font-size:11px;color:#888;margin-bottom:16px">${c.area}</div>
+    <div class="field-group"><div class="field-label">Notes from follow-up</div>
+      <textarea class="field-input" id="fn-notes" rows="4" placeholder="What was discussed...">${c.notes||''}</textarea></div>
+    <div class="field-group"><div class="field-label">Next follow-up date</div>
+      <input class="field-input" id="fn-date" type="date" value="${c.followup||''}"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveFollowupNote(${id})">Save</button>
+    </div>`;
+  document.getElementById('modal').style.display='flex';
+}
+function saveFollowupNote(id){
+  const notes=document.getElementById('fn-notes').value;
+  const date=document.getElementById('fn-date').value;
+  clients=clients.map(c=>c.id===id?{...c,notes,followup:date}:c);
+  persist(); closeModal(); render();
+}
+
+function clientForm(c){
+  return `
+    <div class="field-group"><div class="field-label">Client name</div><input class="field-input" id="f-name" placeholder="Rajesh Mehta" value="${c?c.name:''}"></div>
+    <div class="field-group"><div class="field-label">Deal type</div>
+      <select class="field-select" id="f-type">
+        <option ${(!c||c.type==='Residential buy/sell')?'selected':''}>Residential buy/sell</option>
+        <option ${c&&c.type==='Commercial leasing'?'selected':''}>Commercial leasing</option>
+        <option ${c&&c.type==='New project / developer'?'selected':''}>New project / developer</option>
+      </select></div>
+    <div class="field-group"><div class="field-label">Area preference</div><input class="field-input" id="f-area" placeholder="Bandra, Juhu..." value="${c?c.area:''}"></div>
+    <div class="field-group"><div class="field-label">Budget</div><input class="field-input" id="f-budget" placeholder="₹2.5 Cr" value="${c?c.budget:''}"></div>
+    <div class="field-group"><div class="field-label">Referred by</div><input class="field-input" id="f-ref" placeholder="Name" value="${c?c.ref:''}"></div>
+    <div class="field-group"><div class="field-label">Next follow-up date</div><input class="field-input" id="f-date" type="date" value="${c?c.followup:''}"></div>
+    <div class="field-group"><div class="field-label">Notes</div><textarea class="field-input" id="f-notes" rows="3" placeholder="Requirements, last conversation...">${c?c.notes:''}</textarea></div>
+    <div class="field-group"><div class="field-label">Inspection date</div><input class="field-input" id="f-insp" type="date" value="${c?c.insp:''}"></div>
+    <div class="field-group"><div class="field-label">Inspection location</div><input class="field-input" id="f-insploc" placeholder="Property name / address" value="${c?c.inspLoc:''}"></div>`;
+}
+function openAddClient(){
+  document.getElementById('modal-inner').innerHTML=`<div class="modal-title">New client</div>${clientForm(null)}
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveNewClient()">Add client</button>
+    </div>`;
+  document.getElementById('modal').style.display='flex';
+}
+function openEditClient(id){
+  const c=clients.find(x=>x.id===id);
+  document.getElementById('modal-inner').innerHTML=`<div class="modal-title">Edit client</div>${clientForm(c)}
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEditClient(${id})">Save</button>
+    </div>`;
+  document.getElementById('modal').style.display='flex';
+}
+function getFormData(){
+  return {
+    name:document.getElementById('f-name').value.trim(),
+    type:document.getElementById('f-type').value,
+    area:document.getElementById('f-area').value.trim(),
+    budget:document.getElementById('f-budget').value.trim(),
+    ref:document.getElementById('f-ref').value.trim(),
+    followup:document.getElementById('f-date').value,
+    notes:document.getElementById('f-notes').value.trim(),
+    insp:document.getElementById('f-insp').value,
+    inspLoc:document.getElementById('f-insploc').value.trim(),
+  };
+}
+function saveNewClient(){
+  const data=getFormData(); if(!data.name) return;
+  clients.push({...data,id:nextId++,status:'active',expanded:false});
+  persist(); closeModal(); render();
+}
+function saveEditClient(id){
+  const data=getFormData(); if(!data.name) return;
+  clients=clients.map(c=>c.id===id?{...c,...data}:c);
+  persist(); closeModal(); render();
+}
+function closeModal(){ document.getElementById('modal').style.display='none'; }
+document.getElementById('modal').addEventListener('click',function(e){ if(e.target===this) closeModal(); });
+
+render();
+</script>
+</body>
+</html>
